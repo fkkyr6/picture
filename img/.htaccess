@@ -1,0 +1,113 @@
+
+# WPP Cache load start
+
+<IfModule mod_headers.c>
+Header append Vary: Accept-Encoding
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType text/html .html_gz .html_mobile_gz .html_amp_gz .html_mobile_amp_gz
+    AddEncoding gzip .html_gz .html_mobile_gz .html_amp_gz .html_mobile_amp_gz
+</IfModule>
+<IfModule mod_setenvif.c>
+    SetEnvIfNoCase Request_URI \.html_gz$ no-gzip
+    SetEnvIfNoCase Request_URI \.html_amp_gz$ no-gzip
+    SetEnvIfNoCase Request_URI \.html_mobile_gz$ no-gzip
+    SetEnvIfNoCase Request_URI \.html_mobile_amp_gz$ no-gzip
+</IfModule>
+
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    RewriteCond %{HTTP_USER_AGENT} Mobile [NC]
+    RewriteCond %{HTTP_USER_AGENT} Android [NC]
+    RewriteCond %{HTTP_USER_AGENT} Kindle [NC]
+    RewriteCond %{HTTP_USER_AGENT} BlackBerry [NC]
+    RewriteCond %{HTTP_USER_AGENT} Opera\sMini [NC]
+    RewriteCond %{HTTP_USER_AGENT} Opera\sMobi [NC]
+    RewriteRule .* - [E=WPP_MOBILE_EXT:_mobile]
+    RewriteCond %{REQUEST_URI} /amp/$ [NC]
+    RewriteRule .* - [E=WPP_AMP_EXT:_amp]
+    RewriteCond %{HTTP:Accept-Encoding} gzip
+    RewriteRule .* - [E=WPP_GZIP_EXT:_gz]
+    RewriteCond %{REQUEST_METHOD} GET
+	RewriteCond %{QUERY_STRING} =""
+    RewriteCond %{REQUEST_URI} !^(/wp-json/(.*))$ [NC]
+	RewriteCond %{HTTP:Cookie} !(wordpress_logged_in_|wp-postpass_|wptouch_switch_toggle|comment_author_|comment_author_email_) [NC]
+    
+    RewriteCond "%{DOCUMENT_ROOT}/wp-content/cache/wpp-cache/%{HTTP_HOST}%{REQUEST_URI}/index.html%{ENV:WPP_MOBILE_EXT}%{ENV:WPP_AMP_EXT}%{ENV:WPP_GZIP_EXT}" -f
+    RewriteRule .* "/wp-content/cache/wpp-cache/%{HTTP_HOST}%{REQUEST_URI}/index.html%{ENV:WPP_MOBILE_EXT}%{ENV:WPP_AMP_EXT}%{ENV:WPP_GZIP_EXT}" [L]
+</IfModule>
+
+# WPP Cache load end
+
+
+# BEGIN WordPress
+# 在“BEGIN WordPress”与“END WordPress”之间的指令（行）是
+# 动态生成的，只应被WordPress过滤器修改。
+# 任何对标记之间的指令的修改都会被覆盖。
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+
+# END WordPress
+# WPP GZIP start
+
+<IfModule mod_deflate.c>
+
+    SetOutputFilter DEFLATE
+
+    <IfModule mod_setenvif.c>
+        <IfModule mod_headers.c>
+        SetEnvIfNoCase ^(Accept-EncodXng|X-cept-Encoding|X{15}|~{15}|-{15})$ ^((gzip|deflate)\s*,?\s*)+|[X~-]{4,13}$ HAVE_Accept-Encoding
+        RequestHeader append Accept-Encoding "gzip,deflate" env=HAVE_Accept-Encoding
+        SetEnvIfNoCase Request_URI \
+        \.(?:gif|jpe?g|png|rar|zip|exe|flv|mov|wma|mp3|avi|swf|mp?g|mp4|webm|webp|pdf)$ no-gzip dont-vary
+        </IfModule>
+    </IfModule>
+
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE text/plain
+        AddOutputFilterByType DEFLATE text/html
+        AddOutputFilterByType DEFLATE text/xml
+        AddOutputFilterByType DEFLATE text/css
+
+        AddOutputFilterByType DEFLATE application/xml
+        AddOutputFilterByType DEFLATE application/xhtml+xml
+        AddOutputFilterByType DEFLATE application/rss+xml
+        AddOutputFilterByType DEFLATE application/javascript
+        AddOutputFilterByType DEFLATE application/x-javascript
+        AddOutputFilterByType DEFLATE application/json
+        AddOutputFilterByType DEFLATE application/ld+json
+        AddOutputFilterByType DEFLATE application/manifest+json
+        AddOutputFilterByType DEFLATE application/schema+json
+        AddOutputFilterByType DEFLATE application/rss+xml
+        AddOutputFilterByType DEFLATE application/rdf+xml
+        AddOutputFilterByType DEFLATE application/x-font-ttf
+        AddOutputFilterByType DEFLATE x-web-app-manifest+json
+
+        AddOutputFilterByType DEFLATE font/collection
+        AddOutputFilterByType DEFLATE font/eot
+        AddOutputFilterByType DEFLATE font/opentype
+        AddOutputFilterByType DEFLATE font/otf
+        AddOutputFilterByType DEFLATE font/ttf
+
+        AddOutputFilterByType DEFLATE image/bmp
+        AddOutputFilterByType DEFLATE image/svg+xml
+        AddOutputFilterByType DEFLATE image/vnd.microsoft.icon
+        AddOutputFilterByType DEFLATE image/x-icon
+
+    </IfModule>
+    <IfModule mod_mime.c>
+        AddEncoding gzip              svgz
+    </IfModule>
+</IfModule>
+
+# WPP GZIP end
